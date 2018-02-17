@@ -262,6 +262,6 @@ public class CarrotEater {
 
 	public static Cause getCause()
 	{
-		return Cause.source(Sponge.getPluginManager().fromInstance(CarrotEater.getInstance()).get()).build();
+		return Sponge.getCauseStackManager().getCurrentCause();
 	}
 }
