@@ -1,0 +1,11 @@
+plugins {
+    id 'org.spongepowered.plugin' version '0.8.1'
+}
+
+group = 'com.carrot'
+version = '1.0-S5.1-MC1.10.2'
+description = 'A ClearLag plugin for Sponge'
+
+dependencies {
+    compile 'org.spongepowered:spongeapi:5.1.0'
+}
