@@ -32,32 +32,6 @@ public class ClearItems implements Runnable {
 			
 			@Override
 			public void run() {
-				MessageChannel.TO_ALL.send(Text.of(TextColors.GREEN, "[CarrotEater] ", TextColors.YELLOW, "Items on the ground and XP orbs will be deleted in ", TextColors.DARK_RED, "10 SECONDS"));
-			}
-		})
-		.delay(50, TimeUnit.SECONDS)
-		.async()
-		.submit(CarrotEater.getInstance());
-		
-		Sponge.getScheduler()
-		.createTaskBuilder()
-		.execute(new Runnable() {
-			
-			@Override
-			public void run() {
-				MessageChannel.TO_ALL.send(Text.of(TextColors.GREEN, "[CarrotEater] ", TextColors.YELLOW, "Items on the ground and XP orbs will be deleted in ", TextColors.DARK_RED, "5 SECONDS"));
-			}
-		})
-		.delay(55, TimeUnit.SECONDS)
-		.async()
-		.submit(CarrotEater.getInstance());
-		
-		Sponge.getScheduler()
-		.createTaskBuilder()
-		.execute(new Runnable() {
-			
-			@Override
-			public void run() {
 				int count = EntityEater.eatItems() + EntityEater.eatXP();
 				MessageChannel.TO_ALL.send(Text.of(TextColors.GREEN, "[CarrotEater] ", TextColors.YELLOW, "Items on the ground and XP orbs were deleted: ", TextColors.LIGHT_PURPLE, count, TextColors.YELLOW, " entities"));
 				
