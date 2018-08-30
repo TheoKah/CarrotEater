@@ -3,10 +3,13 @@ package com.carrot.carroteater;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
@@ -24,6 +27,7 @@ import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.plugin.Plugin;
+import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.service.pagination.PaginationList;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
@@ -40,6 +44,7 @@ public class CarrotEater {
 	private File rootDir;
 
 	private static CarrotEater plugin;
+	private static HashSet<UUID> inUse = new HashSet<>();
 
 	@Inject
 	private Logger logger;
@@ -196,16 +201,53 @@ public class CarrotEater {
 				.child(laggyChunk, "entity", "entities", "e")
 				.child(laggyChunkTile, "tile", "tiles", "t")
 				.build();
-		
+
 		CommandSpec eat = CommandSpec.builder()
 				.description(Text.of("Force remove items and entities"))
 				.permission("carroteater.admin.eat")
 				.executor(new CommandExecutor() {
-					
+
 					@Override
 					public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
 						new ClearItems().run();
 						return CommandResult.success();
+					}
+				})
+				.build();
+
+		CommandSpec restore = CommandSpec.builder()
+				.description(Text.of("Cancel last item removal in a 3x3"))
+				.permission("carroteater.restore")
+				.executor(new CommandExecutor() {
+
+					@Override
+					public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
+						if (src instanceof Player) {
+							Player player = (Player) src;
+							if (inUse.contains(player.getUniqueId())) {
+								player.sendMessage(Text.of(TextColors.DARK_RED, "Wait 5 seconds between two calls"));
+								return CommandResult.empty();
+							}
+							inUse.add(player.getUniqueId());
+							int count = 0;
+							for (int i = -1; i < 2; i++) {
+								for (int j = -1; j < 2; j++) {
+									count += SecondChance.popItems(player.getWorld().getUniqueId(), player.getLocation().getChunkPosition().add(i, 0, j));
+								}
+							}
+							player.sendMessage(Text.of(TextColors.GREEN, "[CarrotEater] ", TextColors.YELLOW, "Items on the ground and XP orbs has been restored arround you: ", TextColors.LIGHT_PURPLE, count, TextColors.YELLOW, " entities restored"));
+							Sponge.getScheduler().createTaskBuilder().execute(new Consumer<Task>() {
+								@Override
+								public void accept(Task t) {
+									t.cancel();
+									inUse.remove(player.getUniqueId());
+								}
+							}).delay(5, TimeUnit.SECONDS).submit(CarrotEater.getInstance());
+							return CommandResult.success();
+						} else {
+							src.sendMessage(Text.of(TextColors.DARK_RED, "Need to be a player"));
+							return CommandResult.empty();
+						}
 					}
 				})
 				.build();
@@ -221,6 +263,7 @@ public class CarrotEater {
 						contents.add(Text.of(TextColors.GOLD, "/ce count [world]", TextColors.GRAY, " - ", TextColors.YELLOW, "Count entities"));
 						contents.add(Text.of(TextColors.GOLD, "/ce chunks <entity|tile> [world]", TextColors.GRAY, " - ", TextColors.YELLOW, "List chunks by entities or tile count"));
 						contents.add(Text.of(TextColors.GOLD, "/ce eat", TextColors.GRAY, " - ", TextColors.YELLOW, "Force clear of Items and entities"));
+						contents.add(Text.of(TextColors.GOLD, "/ce restore", TextColors.GRAY, " - ", TextColors.YELLOW, "Revert last carrot eater in a 3x3 chunk area"));
 
 						PaginationList.builder()
 						.title(Text.of(TextColors.GOLD, "{ ", TextColors.YELLOW, "CarrotEater", TextColors.GOLD, " }"))
@@ -233,6 +276,7 @@ public class CarrotEater {
 				.child(countEntity, "count")
 				.child(chunks, "chunks")
 				.child(eat, "eat")
+				.child(restore, "restore", "revert")
 				.build();
 
 		Sponge.getCommandManager().register(plugin, main, "carroteater", "ce", "clag", "clearlag", "clagg");
