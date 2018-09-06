@@ -15,9 +15,6 @@ import org.spongepowered.api.data.persistence.InvalidDataException;
 import org.spongepowered.api.data.persistence.InvalidDataFormatException;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityTypes;
-import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.event.cause.entity.spawn.EntitySpawnCause;
-import org.spongepowered.api.event.cause.entity.spawn.SpawnTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.util.Tuple;
@@ -65,8 +62,7 @@ public class SecondChance {
 					total += item.get().getQuantity();
 					Entity newItem = tuple.getFirst().getExtent().createEntity(EntityTypes.ITEM, tuple.getFirst().getPosition());
 					newItem.offer(Keys.REPRESENTED_ITEM, item.get().createSnapshot());
-					tuple.getFirst().getExtent().spawnEntity(newItem, Cause.source(EntitySpawnCause.builder()
-							.entity(newItem).type(SpawnTypes.PLUGIN).build()).build());
+					tuple.getFirst().getExtent().spawnEntity(newItem);
 				}
 			} catch (InvalidDataException | InvalidDataFormatException | IOException e) {
 				e.printStackTrace();
